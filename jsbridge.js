@@ -1,79 +1,89 @@
 /**
- * JSBridge - iOS交互桥接实现
+ * JSBridge - iOS交互方法封装
  */
 
-(function() {
-    console.log('JSBridge 开始初始化...');
-    
-    const JSBridge = {
-        // 回调函数存储
-        callbacks: {},
-        callbackIndex: 0,
-
-        // 初始化
-        init: function() {
-            console.log('JSBridge init...');
-            // 注册全局回调函数
-            window.nativeCallJs = (response) => {
-                console.log('收到原生回调:', response);
-                this.handleNativeResponse(response);
-            };
+const JSBridgeAPI = {
+    // 设备相关
+    device: {
+        // 获取设备信息
+        getInfo: function() {
+            return JSBridge.invoke('GetDeviceInfo');
         },
-
-        // 调用原生方法
-        invoke: function(action, params = {}) {
-            return new Promise((resolve, reject) => {
-                const callbackId = this.generateCallbackId();
-                
-                // 保存回调函数
-                this.callbacks[callbackId] = {
-                    success: resolve,
-                    fail: reject
-                };
-
-                const message = {
-                    action: action,
-                    params: params,
-                    callbackId: callbackId
-                };
-
-                console.log('调用原生方法:', message);
-
-                // 调用iOS原生方法
-                window.webkit.messageHandlers.nativeMethod.postMessage(message);
-            });
-        },
-
-        // 处理原生回调
-        handleNativeResponse: function(response) {
-            try {
-                const data = typeof response === 'string' ? JSON.parse(response) : response;
-                const callback = this.callbacks[data.callbackId];
-                
-                if (callback) {
-                    if (data.error) {
-                        callback.fail(data.error);
-                    } else {
-                        callback.success(data.result);
-                    }
-                    // 清理回调
-                    delete this.callbacks[data.callbackId];
-                }
-            } catch (e) {
-                console.error('处理原生响应失败:', e);
-            }
-        },
-
-        // 生成回调ID
-        generateCallbackId: function() {
-            return `cb_${this.callbackIndex++}_${Date.now()}`;
+        // 获取网络状态
+        getNetworkType: function() {
+            return JSBridge.invoke('GetNetworkType');
         }
-    };
+    },
 
-    // 初始化
-    JSBridge.init();
-    
-    // 暴露到全局
-    window.JSBridge = JSBridge;
-    console.log('JSBridge 初始化完成');
-})();
+    // 媒体相关
+    media: {
+        // 打开相机
+        openCamera: function() {
+            return JSBridge.invoke('OpenCamera');
+        },
+        // 选择图片
+        chooseImage: function(options = { count: 1 }) {
+            return JSBridge.invoke('ChooseImage', options);
+        }
+    },
+
+    // 扫码相关
+    scanner: {
+        // 扫描二维码
+        scanQRCode: function() {
+            return JSBridge.invoke('ScanQRCode');
+        }
+    },
+
+    // 位置相关
+    location: {
+        // 获取当前位置
+        getCurrentPosition: function() {
+            return JSBridge.invoke('GetLocation');
+        }
+    },
+
+    // 分享相关
+    share: {
+        // 分享文本
+        text: function(text) {
+            return JSBridge.invoke('ShareText', { text });
+        },
+        // 分享链接
+        link: function(options) {
+            return JSBridge.invoke('ShareLink', options);
+        }
+    },
+
+    // 存储相关
+    storage: {
+        // 设置数据
+        set: function(key, value) {
+            return JSBridge.invoke('SetStorage', { key, data: value });
+        },
+        // 获取数据
+        get: function(key) {
+            return JSBridge.invoke('GetStorage', { key });
+        },
+        // 删除数据
+        remove: function(key) {
+            return JSBridge.invoke('RemoveStorage', { key });
+        }
+    },
+
+    // UI相关
+    ui: {
+        // 显示提示
+        showToast: function(options) {
+            return JSBridge.invoke('ShowToast', options);
+        },
+        // 显示加载
+        showLoading: function(options) {
+            return JSBridge.invoke('ShowLoading', options);
+        },
+        // 隐藏加载
+        hideLoading: function() {
+            return JSBridge.invoke('HideLoading');
+        }
+    }
+};
